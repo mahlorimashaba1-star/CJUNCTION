@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>California Junction POS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#0f172a;color:white;padding:10px;padding-bottom:200px}
+.header{background:linear-gradient(90deg,#FFD700,#FF6B00);color:#000;padding:15px;border-radius:15px;text-align:center}
+.header h1{font-size:24px}
+.header p{font-size:12px}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.item{background:#1e293b;border-radius:15px;padding:12px;border:2px solid #334155}
+.item h3{color:#FFD700;font-size:16px}
+.item p{font-size:11px;color:#94a3b8;height:30px;margin:5px 0}
+.price{font-size:20px;font-weight:bold}
+.stock{font-size:11px;background:#334155;padding:3px 8px;border-radius:20px;float:right}
+.actions{display:flex;gap:5px;margin-top:8px}
+.actions button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold}
+.add-stock{background:#3b82f6;color:white}
+.sell{background:#FFD700;color:black;width:100%;margin-top:8px;padding:12px;border:none;border-radius:10px;font-weight:bold;font-size:14px}
+.extra-box{margin-top:20px;background:#1e293b;padding:12px;border-radius:15px}
+.extra-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.extra{background:#334155;padding:10px;border-radius:10px;text-align:center}
+.cart{position:fixed;bottom:0;left:0;right:0;background:#020617;border-top:3px solid #FFD700;padding:12px;border-radius:20px 20px 0 0}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:bold;color:#FFD700;margin-top:10px;border-top:1px solid #334155;padding-top:10px}
+.checkout{width:100%;background:#22c55e;color:white;padding:15px;border:none;border-radius:12px;font-size:18px;font-weight:bold;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🍔 CALIFORNIA JUNCTION</h1>
+<p>KASI STYLE • NEW MENU 2026 • 066 091 6915</p>
+</div>
+
+<div class="menu" id="menu"></div>
+
+<div class="extra-box">
+<h3>🔥 EXTRAS</h3>
+<div class="extra-grid" id="extras"></div>
+</div>
+
+<div class="cart">
+<div id="cart">Cart empty</div>
+<div class="total"><span>TOTAL</span><span id="totalPrice">R0</span></div>
+<button class="checkout" onclick="doCheckout()">✅ SELL - R<span id="btnTotal">0</span></button>
+</div>
+
+<script>
+const MENU=[
+{id:'r10',name:'KOTA R10',desc:'chips, atchar',price:10},
+{id:'r20',name:'KOTA R20',desc:'chips, atchar, French & Vienna',price:20},
+{id:'r30',name:'KOTA R30',desc:'chips, French & Russian OR cheese & Vienna',price:30},
+{id:'r40',name:'KOTA R40',desc:'chips, atchar, French, cheese & Russian',price:40},
+{id:'r45',name:'KOTA R45',desc:'chips, atchar, French, cheese, egg & beef Russian',price:45},
+{id:'r55',name:'KOTA R55',desc:'chips, atchar, French, Russian, double Vienna',price:55},
+{id:'r60',name:'KOTA R60',desc:'chips, atchar, French, cheese, egg, Russian & double Vienna',price:60},
+];
+const EXTRAS=[
+{id:'cheese',name:'Extra Cheese',price:5},
+{id:'egg',name:'Extra Egg',price:5},
+{id:'atchar',name:'Extra Atchar',price:3},
+];
+let STOCK=JSON.parse(localStorage.getItem('cj_stock')||'{}');
+let CART=[];
+function getS(id){return STOCK[id]!==undefined?STOCK[id]:100}
+function setS(id,v){STOCK[id]=v;localStorage.setItem('cj_stock',JSON.stringify(STOCK));render()}
+function render(){
+let m=document.getElementById('menu');m.innerHTML='';
+MENU.forEach(p=>{
+let s=getS(p.id);
+m.innerHTML+=`<div class="item"><span class="stock">${s}</span><h3>${p.name}</h3><p>${p.desc}</p><div class="price">R${p.price}</div><div class="actions"><button class="add-stock" onclick="setS('${p.id}',${s-1})">-1</button><button class="add-stock" style="background:#22c55e" onclick="setS('${p.id}',${s+1})">+ STOCK</button></div><button class="sell" onclick="add('${p.id}','${p.name}',${p.price})" ${s<=0?'disabled style="background:gray"':''}>${s<=0?'OUT OF STOCK':'ADD TO CART'}</button></div>`;
+});
+let e=document.getElementById('extras');e.innerHTML='';
+EXTRAS.forEach(p=>{
+let s=getS(p.id);
+e.innerHTML+=`<div class="extra"><b>${p.name}</b><br><span style="color:#FFD700">+R${p.price}</span><br><small>${s} left</small><br><div style="display:flex;gap:3px;margin-top:5px"><button onclick="setS('${p.id}',${s-1})" style="flex:1;background:#ef4444;color:white;border:none;border-radius:5px;padding:5px">-</button><button onclick="setS('${p.id}',${s+1})" style="flex:1;background:#22c55e;color:white;border:none;border-radius:5px;padding:5px">+</button></div><button onclick="add('${p.id}','${p.name}',${p.price})" style="width:100%;margin-top:5px;background:#FFD700;border:none;border-radius:5px;padding:6px;font-weight:bold">ADD</button></div>`;
+});
+let total=0;let counts={};CART.forEach(i=>{counts[i.name]=(counts[i.name]||0)+1;total+=i.price});
+let html='';for(let k in counts){let itemPrice=MENU.concat(EXTRAS).find(x=>x.name===k).price;html+=`<div style="display:flex;justify-content:space-between;font-size:14px"><span>${k} x${counts[k]}</span><span>R${itemPrice*counts[k]}</span></div>`}
+document.getElementById('cart').innerHTML=html||'Cart empty';
+document.getElementById('totalPrice').innerText='R'+total;
+document.getElementById('btnTotal').innerText=total;
+}
+function add(id,name,price){if(getS(id)<=0){alert('Out of stock! Add stock first');return} CART.push({id,name,price});setS(id,getS(id)-1)}
+function doCheckout(){if(CART.length==0){alert('Cart empty');return}let t=CART.reduce((a,b)=>a+b.price,0);alert('SALE DONE! Total R'+t);CART=[];render()}
+render();
+</script>
+</body>
+</html>

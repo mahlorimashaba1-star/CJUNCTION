@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manager - California Junction</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#020617;color:white;padding:10px}.header{background:linear-gradient(90deg,#FFD700,#FF6B00);color:black;padding:15px;border-radius:15px;text-align:center;font-weight:bold}table{width:100%;border-collapse:collapse;margin-top:15px;background:#1e293b;border-radius:12px;overflow:hidden}th,td{padding:12px 8px;text-align:left;border-bottom:1px solid #334155}th{background:#334155;color:#FFD700}input{width:70px;padding:8px;border-radius:6px;border:none;text-align:center;font-weight:bold;font-size:16px}button{padding:8px 12px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}.btn-plus{background:#22c55e;color:white}.btn-minus{background:#ef4444;color:white}.btn-big{width:100%;padding:15px;margin-top:10px;font-size:16px;border-radius:10px}.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:15px}.stat{background:#1e293b;padding:15px;border-radius:12px;text-align:center}.stat b{font-size:22px;color:#FFD700;display:block}</style>
+</head>
+<body>
+<div class="header"><h1>MANAGER PANEL</h1><p>Add Stock Manually Here</p></div>
+<div class="stats"><div class="stat"><b id="tItems">0</b>Items</div><div class="stat"><b id="tLow">0</b>Low Stock</div><div class="stat"><b id="tVal">R0</b>Value</div></div>
+<table><thead><tr><th>Item</th><th>Price</th><th>Stock</th><th>+/-</th></tr></thead><tbody id="tbody"></tbody></table>
+<button class="btn-big" style="background:#22c55e;color:white" onclick="add10All()">➕ ADD 10 TO ALL ITEMS</button>
+<button class="btn-big" style="background:#3b82f6;color:white" onclick="reset()">🔄 RESET ALL TO 100</button>
+<button class="btn-big" style="background:#334155;color:white" onclick="location.href='index.html'">← BACK TO POS</button>
+
+<script>
+const PRODUCTS=[{id:'r10',name:'KOTA R10',price:10},{id:'r20',name:'KOTA R20',price:20},{id:'r30',name:'KOTA R30',price:30},{id:'r40',name:'KOTA R40',price:40},{id:'r45',name:'KOTA R45',price:45},{id:'r55',name:'KOTA R55',price:55},{id:'r60',name:'KOTA R60',price:60},{id:'cheese',name:'Extra Cheese',price:5},{id:'egg',name:'Extra Egg',price:5},{id:'atchar',name:'Extra Atchar',price:3}];
+let STOCK=JSON.parse(localStorage.getItem('cj_stock')||'{}');
+function getS(id){return STOCK[id]!==undefined?STOCK[id]:100}
+function setS(id,v){STOCK[id]=parseInt(v);localStorage.setItem('cj_stock',JSON.stringify(STOCK));render()}
+function render(){let html='';let total=0;let low=0;PRODUCTS.forEach(p=>{let s=getS(p.id);total+=s*p.price;if(s<10)low++;html+=`<tr><td>${p.name}<br><small>R${p.price}</small></td><td>R${p.price}</td><td><input type="number" value="${s}" onchange="setS('${p.id}',this.value)"></td><td><button class="btn-minus" onclick="setS('${p.id}',${s-1})">-</button> <button class="btn-plus" onclick="setS('${p.id}',${s+1})">+</button></td></tr>`});document.getElementById('tbody').innerHTML=html;document.getElementById('tItems').innerText=PRODUCTS.length;document.getElementById('tLow').innerText=low;document.getElementById('tVal').innerText='R'+total}
+function add10All(){PRODUCTS.forEach(p=>{setS(p.id,getS(p.id)+10)});alert('Added 10 to all!')}
+function reset(){if(confirm('Reset all to 100?')){localStorage.removeItem('cj_stock');STOCK={};render()}}
+render();
+</script>
+</body>
+</html>
